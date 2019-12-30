@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<bean id="teacher" class="com.zyj.spring.constructorTest.Teacher">
+		<constructor-arg type="java.lang.String" name="name" value="Tom" />
+		<constructor-arg type="int" name="age" value="30" />
+		<constructor-arg name="subjects">
+			<list>
+				<value>Chinese</value>
+				<value>English</value>
+				<value>Mathematics</value>
+				<value>Physics</value>
+			</list>
+		</constructor-arg>
+		<constructor-arg name="sideline" ref="sideline" />
+	</bean>
+	<bean id="sideline" class="com.zyj.spring.constructorTest.SidelineImpl">
+		<constructor-arg index="0" value="programming" />
+	</bean>
+	<import resource="importTest/importTest.xml" />
+</beans>

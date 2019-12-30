@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans default-autowire="byType">
+
+	<bean id="dao" class="com.zyj.test.dao.UserDaoImpl"></bean>
+	<bean id="dao1" class="com.zyj.test.dao.UserDaoImpl1"></bean>
+	<bean id="service" class="com.zyj.test.service.UserServiceImpl">
+		<!-- 第一种方式 setter -->
+		<!--
+		<property name="dao" ref="dao"></property>
+		-->
+		<!-- 第二种方式 constructor -->
+		<!--
+		<constructor-args name="dao" ref="dao"></constructor-args>
+		-->
+		<property name="dao" ref="dao"></property>
+	</bean>
+</beans>
