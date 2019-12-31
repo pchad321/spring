@@ -1,5 +1,6 @@
 package com.zyj.mybatis.app;
 
+import org.apache.ibatis.logging.log4j.Log4jImpl;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +28,8 @@ public class AppConfig {
 	@Bean
 	public SqlSessionFactoryBean sqlSessionFactoryBean(DataSource dataSource) {
 		SqlSessionFactoryBean sqlSessionFactoryBean = new SqlSessionFactoryBean();
+		org.apache.ibatis.session.Configuration configuration = new org.apache.ibatis.session.Configuration();
+		configuration.setLogImpl(Log4jImpl.class);
 		sqlSessionFactoryBean.setDataSource(dataSource);
 		return sqlSessionFactoryBean;
 	}
