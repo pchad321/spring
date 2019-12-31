@@ -11,7 +11,7 @@ import javax.sql.DataSource;
 
 @Configuration
 @ComponentScan("com.zyj.mybatis")
-@MapperScan
+@MapperScan("com.zyj.mybatis")
 public class AppConfig {
 
 	@Bean
