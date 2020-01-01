@@ -9,4 +9,5 @@ import org.springframework.context.annotation.Import;
 @ComponentScan("com.zyj.autowired")
 @Import(MyScanRegistrar.class)
 public class AppConfig {
+
 }
