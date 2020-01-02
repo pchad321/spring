@@ -515,9 +515,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			// 十分重要
 			// 给BeanPostProcessor一个机会返回代理来替代真正的实例
 			// 解析指定的bean是否存在初始化前的短路操作
+			// 这里会有一个后置处理器InstantiationAwareBeanPostProcessor，如果用户指向获得一个原始的对象(不做任何处理)，可以实现这个接口
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
 			// 重点
-			// 当经过前置处理后返回的结果如果不为空，那么会直接略过后续的bean的创建而直接返回结果
+			// 当经过后置处理器处理后返回的结果如果不为空，那么会直接略过后续的bean的创建而直接返回结果
 			if (bean != null) {
 				return bean;
 			}

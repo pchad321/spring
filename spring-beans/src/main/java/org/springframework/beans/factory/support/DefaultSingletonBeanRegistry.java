@@ -234,6 +234,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					logger.debug("Creating shared instance of singleton bean '" + beanName + "'");
 				}
 				// 记录加载状态，对循环依赖进行检测
+				// 经过下面的代码，spring通过将beanName放置到singletonsCurrentlyInCreation集合中，才认为一个bean开始创建
 				beforeSingletonCreation(beanName);
 				boolean newSingleton = false;
 				boolean recordSuppressedExceptions = (this.suppressedExceptions == null);

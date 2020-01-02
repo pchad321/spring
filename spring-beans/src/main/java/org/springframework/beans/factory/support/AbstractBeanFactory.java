@@ -255,6 +255,10 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		 *  也就是将ObjectFactory加入到缓存中，一旦下个bean创建时候需要依赖上个bean则直接使用ObjectFactory
 		 */
 		// 直接尝试从缓存获取或者singletonFactories中的ObjectFactory中获取
+		// 一般来说在初始化的时候，bean还没有被初始化，所以一般是不能获取到的；
+		// 但是有一种情况，当一个类是懒加载时(lazy=true)，当getBean时，可能这个类对应的bean已经初始化完成了
+		// 这里是第一次调用getSingleton方法，后面还有第二次
+		// 这里主要是在getBean时获取一个对象
 		Object sharedInstance = getSingleton(beanName);
 		if (sharedInstance != null && args == null) {
 			if (logger.isTraceEnabled()) {
@@ -304,7 +308,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				}
 			}
 
-			// 如果不是仅仅做类型检查而是创建bean，这里要进行记录
+			// 如果不是仅仅做类型检查而是创建bean，这里要进行记录，以防止重复创建
 			if (!typeCheckOnly) {
 				markBeanAsCreated(beanName);
 			}
@@ -341,6 +345,9 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				// 实例化依赖的bean后便可以实例化mbd本身了
 				// singleton模式的创建
 				if (mbd.isSingleton()) {
+					// 这里是第二次调用getSingleton
+					// spring已经做了该做的验证，如果都成立，调用getSingleton方法，如果为空则创建对象
+					// 这里是创建一个实例
 					sharedInstance = getSingleton(beanName, () -> {
 						try {
 							return createBean(beanName, mbd, args);
