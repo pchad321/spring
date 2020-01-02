@@ -8,8 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Aspect
 public class MyAspect {
-
-	@Pointcut("execution(* com.zyj.aspect..*.*(..))")
+	@Pointcut("execution(* com.zyj.aspect.dao..*.*(..))")
 	public void pointCut() {
 
 	}
