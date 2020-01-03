@@ -1199,12 +1199,16 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			return obtainFromSupplier(instanceSupplier, beanName);
 		}
 
-		// 如果工厂方法不为空，则使用工厂方法初始化策略
+		// 如果工厂方法不为空，则使用工厂方法创建对象
+		// 工厂方法即factory-method，可以使用xml进行配置
 		if (mbd.getFactoryMethodName() != null) {
 			return instantiateUsingFactoryMethod(beanName, mbd, args);
 		}
 
 		// Shortcut when re-creating the same bean...
+		// 当多次构建同一个bean的时候，可以使用这个shortcut
+		// 即不再需要每次都去推断应该使用哪种方式构造bean
+		// 这里的resolved以及mbd.constructorArgumentsResolved会在bean的第一次实例化时被设置
 		boolean resolved = false;
 		boolean autowireNecessary = false;
 		if (args == null) {
@@ -1221,17 +1225,20 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// 如果已经解析过则使用解析好的构造函数方法不需要再次锁定
 		if (resolved) {
 			if (autowireNecessary) {
-				// 构造函数自动注入
+				// 通过构造函数自动装配的方式构造bean对象
 				return autowireConstructor(beanName, mbd, null, null);
 			}
 			else {
-				// 使用默认构造函数构造
+				// 使用默认无参构造函数构造
 				return instantiateBean(beanName, mbd);
 			}
 		}
 
 		// Candidate constructors for autowiring?
 		// 需要根据参数解析构造函数
+		// 由后置处理器确定返回哪些构造方法
+		// 如果当前类中只有一个无参的构造方法，那么spring会认为这是一个默认的构造方法，即没有构造方法
+		// 如果当前类中既有一个无参的构造方法，也有一个有参的构造方法，此时spring还是认为只有一个默认的构造方法，即没有
 		Constructor<?>[] ctors = determineConstructorsFromBeanPostProcessors(beanClass, beanName);
 		if (ctors != null || mbd.getResolvedAutowireMode() == AUTOWIRE_CONSTRUCTOR ||
 				mbd.hasConstructorArgumentValues() || !ObjectUtils.isEmpty(args)) {
@@ -1343,6 +1350,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 						getAccessControlContext());
 			}
 			else {
+				// 得到类的实例化策略
+				// 默认情况下得到的是反射的实例化策略
 				beanInstance = getInstantiationStrategy().instantiate(mbd, beanName, parent);
 			}
 			BeanWrapper bw = new BeanWrapperImpl(beanInstance);

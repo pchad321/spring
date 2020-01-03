@@ -343,7 +343,10 @@ public class ConfigurationClassPostProcessor implements BeanDefinitionRegistryPo
 						registry, this.sourceExtractor, this.resourceLoader, this.environment,
 						this.importBeanNameGenerator, parser.getImportRegistry());
 			}
+
 			// 将扫描出来的bean对应的BeanDefinition添加到factory的map中
+			// 需要注意的是，这里扫描出来的bean当中可能包含了特殊类，例如
+			// ImportBeanDefinitionRegistrar也在这个方法中处理
 			this.reader.loadBeanDefinitions(configClasses);
 			alreadyParsed.addAll(configClasses);
 
