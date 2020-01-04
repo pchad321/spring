@@ -117,14 +117,20 @@ class ConstructorResolver {
 	 */
 	public BeanWrapper autowireConstructor(String beanName, RootBeanDefinition mbd,
 			@Nullable Constructor<?>[] chosenCtors, @Nullable Object[] explicitArgs) {
-
+		// 实例一个BeanWrapperImpl对象
 		BeanWrapperImpl bw = new BeanWrapperImpl();
 		this.beanFactory.initBeanWrapper(bw);
 
+		// constructorToUse决定实例化类的构造方法
 		Constructor<?> constructorToUse = null;
+		// 构造方法需要使用的参数
 		ArgumentsHolder argsHolderToUse = null;
 		Object[] argsToUse = null;
 
+		// 确定参数值列表
+		// argsToUse可以使用两种办法设置
+		// 第一种是通过beanDefinition设置
+		// 第二种是通过xml设置
 		if (explicitArgs != null) {
 			argsToUse = explicitArgs;
 		}
