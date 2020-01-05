@@ -121,10 +121,10 @@ class ConstructorResolver {
 		BeanWrapperImpl bw = new BeanWrapperImpl();
 		this.beanFactory.initBeanWrapper(bw);
 
-		// constructorToUse决定实例化类的构造方法
+		// constructorToUse决定实例化类的构造方法，具体使用哪一个，spring有自己的规则
 		Constructor<?> constructorToUse = null;
-		// 构造方法需要使用的参数
 		ArgumentsHolder argsHolderToUse = null;
+		// 构造方法需要使用的参数的值
 		Object[] argsToUse = null;
 
 		// 确定参数值列表
@@ -137,6 +137,8 @@ class ConstructorResolver {
 		else {
 			Object[] argsToResolve = null;
 			synchronized (mbd.constructorArgumentLock) {
+				// 获取已经解析的构造方法
+				// 一般不会有，因为构造方法一般会提供一个，除非有多个
 				constructorToUse = (Constructor<?>) mbd.resolvedConstructorOrFactoryMethod;
 				if (constructorToUse != null && mbd.constructorArgumentsResolved) {
 					// Found a cached constructor...
@@ -157,6 +159,7 @@ class ConstructorResolver {
 			if (candidates == null) {
 				Class<?> beanClass = mbd.getBeanClass();
 				try {
+					// 得到所有的构造方法
 					candidates = (mbd.isNonPublicAccessAllowed() ?
 							beanClass.getDeclaredConstructors() : beanClass.getConstructors());
 				}
@@ -181,28 +184,66 @@ class ConstructorResolver {
 			}
 
 			// Need to resolve the constructor.
+			// 如果没有已经解析的构造方法，则需要去解析
+			// 判断构造方法是否为空，判断是否根据构造方法自动注入
 			boolean autowiring = (chosenCtors != null ||
 					mbd.getResolvedAutowireMode() == AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR);
 			ConstructorArgumentValues resolvedValues = null;
 
+			// 定义最小参数个数，即构造方法最少需要几个参数
+			// 如果如果为构造方法的参数列表制定了具体的值，那么这些值的个数就是构造方法参数的个数
 			int minNrOfArgs;
 			if (explicitArgs != null) {
 				minNrOfArgs = explicitArgs.length;
 			}
 			else {
+				// 实例一个对象，用来存放构造方法的参数值
+				// 其中主要存放了参数值和参数值所对应的下标
 				ConstructorArgumentValues cargs = mbd.getConstructorArgumentValues();
 				resolvedValues = new ConstructorArgumentValues();
+				/**
+				 * 确定构造方法的参数数量，例如
+				 * <bean id="test" class="com.zyj.test">
+				 *     <constructor-arg index="0" value="str1"/>
+				 *     <constructor-arg index="1" value="2"/>
+				 * </bean>
+				 *
+				 * minNrOfArgs = 2
+				 */
 				minNrOfArgs = resolveConstructorArguments(beanName, mbd, bw, cargs, resolvedValues);
 			}
 
+			// 根据构造方法的访问权限级别和参数数量进行排序
+			/**
+			 * 构造方法排序，访问权限优先，然后是参数个数
+			 * 1. public Test(Object o1, Object o2, Object o3)
+			 * 2. public Test(Object o1, Object o2)
+			 * 3. public Test(Object o1)
+			 * 4. protected Test(Integer i1, Object o1, Object o2, Object o3)
+			 * 5. protected Test(Integer i1, Object o1, Object o2)
+			 * 6. protected Test(Integer i1, Object o1)
+			 */
 			AutowireUtils.sortConstructors(candidates);
+			// 定义了一个差异变量
 			int minTypeDiffWeight = Integer.MAX_VALUE;
+			// 存放有歧义的构造方法(即有两个或以上个构造方法相同)
 			Set<Constructor<?>> ambiguousConstructors = null;
 			LinkedList<UnsatisfiedDependencyException> causes = null;
 
 			for (Constructor<?> candidate : candidates) {
 				Class<?>[] paramTypes = candidate.getParameterTypes();
-
+				/**
+				 * constructorToUse主要是用来存放已经解析过并且在使用的构造方法
+				 * 只有在等于空的时候，才有继续的意义，因为西面如果解析到了一个符合的构造方法，就会赋值给这个变量。
+				 * 如果这个变量不等于null时就不需要进行解析，即已经找到了一个合适的构造方法，可以直接使用
+				 *
+				 * argsToUse.length > paramTypes.length
+				 * 假设argsToUse = [1, "test", obj]，那么会去匹配上面的构造方法1和5
+				 * 由于构造方法1有更高的额访问权限，所以选择1，尽管5看起来更加匹配
+				 *
+				 * 下面的判断是基于上面的排序的，因为参数个数越少排在越后的位置，所以当spring发现构造函数的参数个数比需要调用的构造函数
+				 * 的参数个数还少时，说明当前以及后面的构造函数都不会满足条件，所以直接break
+				 */
 				if (constructorToUse != null && argsToUse != null && argsToUse.length > paramTypes.length) {
 					// Already found greedy constructor that can be satisfied ->
 					// do not look any further, there are only less greedy constructors left.
@@ -215,6 +256,7 @@ class ConstructorResolver {
 				ArgumentsHolder argsHolder;
 				if (resolvedValues != null) {
 					try {
+						// 判断是否添加了ConstructorProperties注解
 						String[] paramNames = ConstructorPropertiesChecker.evaluate(candidate, paramTypes.length);
 						if (paramNames == null) {
 							ParameterNameDiscoverer pnd = this.beanFactory.getParameterNameDiscoverer();
@@ -222,6 +264,7 @@ class ConstructorResolver {
 								paramNames = pnd.getParameterNames(candidate);
 							}
 						}
+						// 由于spring只能提供字符串的参数值，所以需要进行转换
 						argsHolder = createArgumentArray(beanName, mbd, resolvedValues, bw, paramTypes, paramNames,
 								getUserDeclaredConstructor(candidate), autowiring, candidates.length == 1);
 					}
@@ -245,6 +288,11 @@ class ConstructorResolver {
 					argsHolder = new ArgumentsHolder(explicitArgs);
 				}
 
+				/**
+				 *  typeDiffWeight，即差异量，表示argsHolder.arguments和paramTypes之间的差异
+				 * 	每个参数值的类型与构造方法参数列表的类型直接的差异
+				 * 	通过这个差异量来衡量或者确定一个合适的构造方法
+				 */
 				int typeDiffWeight = (mbd.isLenientConstructorResolution() ?
 						argsHolder.getTypeDifferenceWeight(paramTypes) : argsHolder.getAssignabilityWeight(paramTypes));
 				// Choose this constructor if it represents the closest match.
