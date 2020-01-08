@@ -1,16 +1,19 @@
 package com.zyj.spring.postProcessorTest.service;
 
 import com.zyj.spring.postProcessorTest.dao.Dao;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.zyj.spring.postProcessorTest.dao.MyDao;
 import org.springframework.stereotype.Component;
 
 @Component
 public class MyService implements Service {
-	@Autowired
 	Dao dao;
+
+	public void setDao(MyDao dao) {
+		this.dao = dao;
+	}
 
 	@Override
 	public void query() {
-		System.out.println(dao.getClass().getSimpleName());
+		dao.query();
 	}
 }
