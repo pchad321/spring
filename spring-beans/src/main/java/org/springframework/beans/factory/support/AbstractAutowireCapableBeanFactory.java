@@ -415,6 +415,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		Object result = existingBean;
 		for (BeanPostProcessor processor : getBeanPostProcessors()) {
+			// 第七次执行spring的后置处理器
 			Object current = processor.postProcessBeforeInitialization(result, beanName);
 			if (current == null) {
 				return result;
@@ -512,7 +513,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		try {
 			// Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
-			// 十分重要
+			// 第一次调用spring后置处理器(InstantiationAwareBeanPostProcessor)
+			// 在bean的初始化前调用后置处理器
 			// 给BeanPostProcessor一个机会返回代理来替代真正的实例
 			// 解析指定的bean是否存在初始化前的短路操作
 			// 这里会有一个后置处理器InstantiationAwareBeanPostProcessor，如果用户指向获得一个原始的对象(不做任何处理)，可以实现这个接口
@@ -570,6 +572,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			instanceWrapper = this.factoryBeanInstanceCache.remove(beanName);
 		}
 		if (instanceWrapper == null) {
+			// 第二次调用spring的后置处理器
+			// 实例化bean
 			// 根据指定bean使用对应的策略创建新的实例，如：工厂方法，构造函数自动注入，简单初始化
 			// 将BeanDefinition转化为BeanWrapper
 			// 1. 如果存在工厂方法则使用工厂方法进行初始化
@@ -588,6 +592,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		synchronized (mbd.postProcessingLock) {
 			if (!mbd.postProcessed) {
 				try {
+					// 第三次调用spring后置处理器
 					// bean合并后的处理，Autowired注解正是通过此方法实现注入类型的预解析
 					applyMergedBeanDefinitionPostProcessors(mbd, beanType, beanName);
 				}
@@ -608,6 +613,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				logger.trace("Eagerly caching bean '" + beanName +
 						"' to allow for resolving potential circular references");
 			}
+
+			// 第四次执行spring的后置处理器
+
 			// 为了避免后期循环依赖，可以在bean初始化完成前将创建实例的ObjectFactory加入工厂
 			// 对bean再一次依赖引用，主要应用SmartInstantiationAware BeanPostProcessor
 			// AOP就是在这里将advice动态织入bean中，若没有则直接返回bean，不做任何处理
@@ -617,6 +625,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// Initialize the bean instance.
 		Object exposedObject = bean;
 		try {
+			// 第五次执行spring的后置处理器
+			// 第六次执行spring的后置处理器
+
 			// 对bean进行填充，将各个属性值注入，其中可能存在依赖于其他bean的属性，则会递归初始依赖bean
 			populateBean(beanName, mbd, instanceWrapper);
 			// 调用初始化方法，比如init-method
@@ -1237,6 +1248,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		// Candidate constructors for autowiring?
+		// 第二次执行后置处理器
 		// 需要根据参数解析构造函数
 		// 由后置处理器确定返回哪些构造方法
 		// 如果当前类中只有一个无参的构造方法，那么spring会认为这是一个默认的构造方法，即没有构造方法
@@ -1428,6 +1440,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// to support styles of field injection.
 		boolean continueWithPropertyPopulation = true;
 
+		// 第五次执行spring的后置处理器
 		if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
 			for (BeanPostProcessor bp : getBeanPostProcessors()) {
 				if (bp instanceof InstantiationAwareBeanPostProcessor) {
@@ -1470,6 +1483,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}
 			for (BeanPostProcessor bp : getBeanPostProcessors()) {
 				if (bp instanceof InstantiationAwareBeanPostProcessor) {
+
+					// 第六次执行spring的后置处理器
 					InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) bp;
 					PropertyValues pvsToUse = ibp.postProcessProperties(pvs, bw.getWrappedInstance(), beanName);
 					if (pvsToUse == null) {
@@ -1837,10 +1852,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		Object wrappedBean = bean;
 		if (mbd == null || !mbd.isSynthetic()) {
+			// 第七次执行spring的后置处理器
+			// 执行后置处理器的before
 			wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
 		}
 
 		try {
+			// 执行bean生命周期的回调方法init
 			invokeInitMethods(beanName, wrappedBean, mbd);
 		}
 		catch (Throwable ex) {
@@ -1849,6 +1867,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					beanName, "Invocation of init method failed", ex);
 		}
 		if (mbd == null || !mbd.isSynthetic()) {
+			// 第八次执行spring的后置处理器
 			wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
 		}
 
