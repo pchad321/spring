@@ -567,9 +567,16 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				// 否则按照正常的流程走
 
 				// 2. SmartInstantiationAwareBeanPostProcessor#determineCandidateConstructors方法
+				// 推断构造方法
+
 				// 3. MergedBeanDefinitionPostProcessor#postProcessMergedBeanDefinition方法
+				// 缓存注解信息
+
 				// 4. SmartInstantiationAwareBeanPostProcessor#getEarlyBeanReference方法
+				// 得到一个具体暴露的对象，而不是bean(bean由spring创建，并且存放在spring容器之中)
+
 				// 5. InstantiationAwareBeanPostProcessor#postProcessAfterInstantiation方法
+				// 判断一个bean是否需要完成属性填充
 				// 方法在目标对象实例化之后调用，这个时候对象已经被实例化，但是该实例的属性还未被设置，都是null。
 				// 如果该方法返回false，会忽略属性值的设置；如果返回true，会按照正常流程设置属性值。
 				// 不论postProcessBeforeInstantiation方法的返回值是什么都会执行
