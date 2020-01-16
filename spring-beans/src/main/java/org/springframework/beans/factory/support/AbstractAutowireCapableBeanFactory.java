@@ -504,6 +504,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			// 但是Spring配置中有lookup-method和replace-method，而这两个配置的
 			// 加载其实就是将配置统一存放在BeanDefinition中的methodOverrides属性里，
 			// 而这个函数的操作其实也就是针对于这两个配置的
+			// 这两个功能实现原理其实是在bean实例化的时候如果检测到存在methodOverrides属性，
+			// 会动态地为当前bean生成代理并使用对应的拦截器为bean做增强处理
 			mbdToUse.prepareMethodOverrides();
 		}
 		catch (BeanDefinitionValidationException ex) {
@@ -519,8 +521,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			// 解析指定的bean是否存在初始化前的短路操作
 			// 这里会有一个后置处理器InstantiationAwareBeanPostProcessor，如果用户指向获得一个原始的对象(不做任何处理)，可以实现这个接口
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
-			// 重点
-			// 当经过后置处理器处理后返回的结果如果不为空，那么会直接略过后续的bean的创建而直接返回结果
+			// 重点！！！
+			// 当经过后置处理器处理后返回的结果如果不为空，那么会直接略过bean的后续创建过程而直接返回结果
+			// AOP功能就是基于这里的判断的
 			if (bean != null) {
 				return bean;
 			}

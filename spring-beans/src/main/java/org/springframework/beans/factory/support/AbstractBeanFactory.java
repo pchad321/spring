@@ -288,6 +288,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			// 如果beanDefinitionMap中也就是在所有已经加载的类中不包括beanName则尝试从
 			// parentBeanFactory中检测
 			BeanFactory parentBeanFactory = getParentBeanFactory();
+			// !containsBeanDefinition(beanName)检测如果当前加载的xml配置文件中不包含beanName多对应的配置
+			// 就只能到parentBeanFactory去尝试一下，然后再去递归的调用getBean方法
 			if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
 				// Not found -> check parent.
 				String nameToLookup = originalBeanName(name);
@@ -1695,7 +1697,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		// If it's a FactoryBean, we use it to create a bean instance, unless the
 		// caller actually wants a reference to the factory.
 		// 现在我们有了个bean的实例，这个实例可能会是正常的bean或者是FactoryBean
-		// 如果是FactoryBean我们使用它创建实例，但是如果用户想要直接获取工厂实例而不是工作的
+		// 如果是FactoryBean我们使用它创建实例，但是如果用户想要直接获取工厂实例而不是工厂的
 		// getObject方法对应的实例那么传入的name应该加入前缀&
 		if (!(beanInstance instanceof FactoryBean) || BeanFactoryUtils.isFactoryDereference(name)) {
 			return beanInstance;

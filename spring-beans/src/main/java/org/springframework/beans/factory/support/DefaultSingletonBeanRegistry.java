@@ -182,8 +182,8 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	protected Object getSingleton(String beanName, boolean allowEarlyReference) {
 		/**
 		 *  singletonObjects：用于保存BeanName和创建bean实例之间的关系，bean name -> bean instance
-		 *  singletonFactories：用于保存BeanName和创建bean的工厂之间的关系，bean name -> bean instance
-		 * 	earlySingletonObjects：也是用于保存BeanName和创建bean的工厂之间的关系，与singletonObjects的不同之处在于
+		 *  singletonFactories：用于保存BeanName和创建bean的工厂之间的关系，bean name -> ObjectFactory
+		 * 	earlySingletonObjects：也是用于保存BeanName和创建bean实例之间的关系，与singletonObjects的不同之处在于
 		 * 		当一个单例bean被放到这里面后，那么当bean还在创建过程中，就可以通过getBean方法获取到了，其目的是用来检测
 		 * 		循环引用
 		 * 	registeredSingletons：用来保存当前所有已注册的bean
@@ -227,6 +227,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 			// 首先检查对应的bean是否已经加载过，因为singleton模式其实就是复用以前创建的bean，
 			// 所以这一步是必须的
 			Object singletonObject = this.singletonObjects.get(beanName);
+			// 如果为空才可以进行singleton的bean的初始化
 			if (singletonObject == null) {
 				if (this.singletonsCurrentlyInDestruction) {
 					throw new BeanCreationNotAllowedException(beanName,
@@ -236,7 +237,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 				if (logger.isDebugEnabled()) {
 					logger.debug("Creating shared instance of singleton bean '" + beanName + "'");
 				}
-				// 记录加载状态，对循环依赖进行检测
+				// 加载单例前记录加载状态，对循环依赖进行检测
 				// 经过下面的代码，spring通过将beanName放置到singletonsCurrentlyInCreation集合中，才认为一个bean开始创建
 				beforeSingletonCreation(beanName);
 				boolean newSingleton = false;
