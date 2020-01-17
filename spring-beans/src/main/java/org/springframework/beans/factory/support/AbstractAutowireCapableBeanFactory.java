@@ -609,6 +609,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		// Eagerly cache singletons to be able to resolve circular references
 		// even when triggered by lifecycle interfaces like BeanFactoryAware.
+		// 是否需要提前曝光
 		boolean earlySingletonExposure = (mbd.isSingleton() && this.allowCircularReferences &&
 				isSingletonCurrentlyInCreation(beanName));
 		if (earlySingletonExposure) {
@@ -666,7 +667,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 					/**
 					 *  因为bean创建后其所依赖的bean一定是已经创建的，
-					 *  actualDependentBeans不为空则表示当前bean创建后其依赖的bean却没有全部创建完，即存在循环依赖
+					 *  actualDependentBeans不为空则表示当前bean创建后其依赖的bean却没有全部创建完，
+					 *  即存在循环依赖
 					 */
 					if (!actualDependentBeans.isEmpty()) {
 						throw new BeanCurrentlyInCreationException(beanName,
